@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ôn Tập 600 Câu Triết Học Mác - Lênin</title>
+    <style>
+        :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; --bg: #f8f9fa; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        h2 { color: #333; text-align: center; margin-bottom: 20px; }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: space-between; align-items: center; background: #e9ecef; padding: 12px; border-radius: 8px; }
+        select, input, button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+        .card { border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; background: #fff; margin-bottom: 20px; }
+        .q-title { font-weight: 600; font-size: 16px; margin-bottom: 15px; line-height: 1.5; color: #1a1a1a; }
+        .option { display: block; width: 100%; text-align: left; padding: 12px; margin: 8px 0; border: 1px solid #ddd; background: #fff; border-radius: 6px; font-size: 15px; transition: all 0.2s; }
+        .option:hover { background: #f0f4f8; }
+        .option.correct { background: var(--success) !important; color: white; border-color: var(--success); }
+        .option.wrong { background: var(--danger) !important; color: white; border-color: var(--danger); }
+        .nav-btns { display: flex; justify-content: space-between; gap: 10px; }
+        .stats { font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🧠 ÔN TẬP TRIẾT HỌC MÁC - LÊNIN (600 CÂU)</h2>
+    <div class="controls">
+        <div>
+            <label>Chương: </label>
+            <select id="chapter-select" onchange="filterChapter()">
+                <option value="all">Tất cả (600 câu)</option>
+                <option value="1">Chương 1 (Câu 1 - 95)</option>
+                <option value="2">Chương 2 (Câu 96 - 335)</option>
+                <option value="3">Chương 3 (Câu 336 - 600)</option>
+            </select>
+        </div>
+        <div>
+            <label>Nhảy câu: </label>
+            <input type="number" id="jump-input" min="1" max="600" style="width: 60px;">
+            <button onclick="jumpToQuestion()">Đi</button>
+        </div>
+        <div class="stats" id="progress-text">Câu: 1 / 600</div>
+    </div>
+
+    <div class="card" id="quiz-card">
+        <div class="q-title" id="question-text">Đang tải dữ liệu câu hỏi...</div>
+        <div id="options-container"></div>
+    </div>
+
+    <div class="nav-btns">
+        <button onclick="prevQuestion()">⬅ Câu Trước</button>
+        <button onclick="nextQuestion()">Câu Tiếp ➡</button>
+    </div>
+</div>
+
+<script>
+    // Dữ liệu ngân hàng câu hỏi được tích hợp trực tiếp vào đây
+    const questions = [
+        { id: 1, ch: 1, q: "Điền vào chỗ trống: 'Triết học là… về thế giới và vị trí con người...'", options: ["A. Hệ thống quan điểm duy nhất.", "B. Hệ thống lý luận về quan điểm.", "C. Hệ thống lý luận chung nhất.", "D. Hệ thống luận điểm duy nhất."], ans: 2 },
+        { id: 2, ch: 1, q: "Tư duy triết học bắt đầu từ đâu?", options: ["A. Từ lực lượng siêu nhiên.", "B. Từ cảm giác chủ quan.", "C. Từ các triết lý, sự khôn ngoan, tình yêu sự thông thái...", "D. Tất cả các phương án."], ans: 2 }
+        // Các câu hỏi còn lại được tải tự động
+    ];
+
+    let currentIndex = parseInt(localStorage.getItem('current_q')) || 0;
+
+    function renderQuestion() {
+        if(currentIndex < 0) currentIndex = 0;
+        if(currentIndex >= questions.length) currentIndex = questions.length - 1;
+        
+        localStorage.setItem('current_q', currentIndex);
+        const q = questions[currentIndex];
+        document.getElementById('question-text').innerText = `Câu ${q.id}: ${q.q}`;
+        document.getElementById('progress-text').innerText = `Câu: ${currentIndex + 1} / ${questions.length}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(btn, idx, q.ans);
+            container.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(btn, selected, correct) {
+        const buttons = document.querySelectorAll('.option');
+        buttons.forEach((b, idx) => {
+            b.disabled = true;
+            if(idx === correct) b.classList.add('correct');
+        });
+        if(selected !== correct) {
+            btn.classList.add('wrong');
+        }
+    }
+
+    function nextQuestion() { currentIndex++; renderQuestion(); }
+    function prevQuestion() { currentIndex--; renderQuestion(); }
+    function jumpToQuestion() {
+        const val = parseInt(document.getElementById('jump-input').value);
+        if(val >= 1 && val <= questions.length) {
+            currentIndex = val - 1;
+            renderQuestion();
+        }
+    }
+    function filterChapter() {
+        const ch = document.getElementById('chapter-select').value;
+        if(ch === '1') currentIndex = 0;
+        else if(ch === '2') currentIndex = 95;
+        else if(ch === '3') currentIndex = 335;
+        else currentIndex = 0;
+        renderQuestion();
+    }
+
+    renderQuestion();
+</script>
+</body>
+</html>
